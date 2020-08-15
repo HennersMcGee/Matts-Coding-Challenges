@@ -1,106 +1,119 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Fri Aug 14 07:20:11 2020
+'''
+    File name: main.py
+    Author: Henry Letton
+    Date created: 2020-08-14
+    Python Version: 3.7
+    Desciption: This program manages a user todo list, using CLI.
+'''
 
-@author: Henry
-"""
+# Import required modules
+from datetime import datetime # For dealing with due dates
+import pickle # For saving list to disc
+import os # For moving working directory
 
-# Import any required modules
-from datetime import datetime
-
-
-
-
-# Create class for list of to-do items
-class ToDoList:
-    
-    def __init__(self):
-        self.actual_list = []
-        
-    def add_item(self, item):
-         self.actual_list.append(item)
-        
-    def remove_item(self, item_r):
-        for i in range(len(self.actual_list)):
-            if self.actual_list[i].description == item_r:
-                del self.actual_list[i]
-                break
-                
-    def find_item(self, item_f):
-        for i in range(len(self.actual_list)):
-            if self.actual_list[i].description == item_f:
-                return i
-                break
-            
-    def print_items(self):
-        for i in range(len(self.actual_list)):
-            print(self.actual_list[i].description)
+# Make sure the wording directory is the same location as these (example below)
+# os.getcwd()
+# os.chdir('C:\\Users\\Henry\\OneDrive\\Documents\\Python\\Matts-Coding-Challenges\\todo-list')
 
 
-# Create class for to do item
-class ToDoItem:
-    
-    def __init__(self, description):
-        self.description = description
-        self.complete = False
-        
-    def add_date(self, date):
-        self.date_str = date
-        self.date_obj = datetime.strptime(date, '%d/%m/%Y')
-        
-    def mark_as_complete(self):
-        self.complete = True
-        
-    def edit_description(self, new_description):
-        self.description = new_description
+# Import functions and objects from other file
+from fn_and_obj import load_prev_list, save_list_to_disc, ToDoList, ToDoItem
+
+
+# New to do list or can use previous
+your_todo_list = load_prev_list()
+
 
 # Create while loop to ask for user input repeatably until the user is finished
-user_editing = True
-your_todo_list = ToDoList()
-
+user_editing = True # Break variable, when set to false will end while loop
 
 while user_editing:
     
-    print('Your options are:\n')
-    print('1 - Add a new to do item\n')
-    print('2 - See all items\n')
-    print('3 - Delete an item\n')
-    print('9 - Exit. This will close edit and save your list.\n')
-    
-    change = input("Please enter a number corresponding to the change you would like to make:")
-    # Catch any erroneous entries here
+    print('\nYour options are:')
+    print('1 - Add a new to do item')
+    print('2 - Delete an item')
+    print('3 - Edit item description')
+    print('4 - Edit item due date')
+    print('5 - Mark item as completed')
+    print('6 - See all incomplete items')
+    print('7 - See all complete items')
+    print('8 - See all items')
+    print('9 - See all overdue items')
+    print('10 - Search in items')
+    print('99 - Exit. This will close edit and save your list.')
+
+    change = input("Please enter a number corresponding to the change you would like to make: ")
 
     if change == '1':
-        item_name = input("What is the new item called:")
-        your_todo_list.add_item(ToDoItem(item_name))
-
-    if change == '2':
-        your_todo_list.print_items()
+        item_name = input("What is the item description? ")
+        due_date = input("When is the due date? (This must be in the format DD/MM/YYYY) ")
         
-    if change == '3':
-        item_name = input("What is this item called:")
+        # Error handling, in case the date is not entered correctly
+        no_date = True
+        while no_date:
+            try:
+                your_todo_list.add_item(ToDoItem(item_name, due_date))
+                no_date = False
+            except:
+                due_date = input("The format must be DD/MM/YYYY. Pleae enter again: ")
+
+    elif change == '2':
+        item_name = input("What is this item description? ")
         your_todo_list.remove_item(item_name)
 
-    if change == '9':
+    # For any todo item edits, they are first checked to exist
+    elif change == '3':
+        item_name = input("What is this item description? ")
+        if your_todo_list.item_exist(item_name):
+            item_new_name = input("What is this new item description? ")
+            idx = your_todo_list.find_item(item_name)
+            your_todo_list.actual_list[idx].edit_description(item_new_name)
+        else:
+            print('Item does not exist')
+        
+    elif change == '4':
+        item_name = input("What is this item description? ")
+        if your_todo_list.item_exist(item_name):
+            item_new_date = input("What is this new item due date? ")
+            idx = your_todo_list.find_item(item_name)
+            your_todo_list.actual_list[idx].edit_date(item_new_name)
+        else:
+            print('Item does not exist')
+        
+    elif change == '5':
+        item_name = input("What is this item description? ")
+        if your_todo_list.item_exist(item_name):
+            idx = your_todo_list.find_item(item_name)
+            your_todo_list.actual_list[idx].mark_as_complete()
+        else:
+            print('Item does not exist')
+        
+    elif change == '6':
+        your_todo_list.print_incomp_items()
+        
+    elif change == '7':
+        your_todo_list.print_comp_items()
+
+    elif change == '8':
+        your_todo_list.print_items()
+
+    elif change == '9':
+        your_todo_list.print_overdue_items()
+
+    elif change == '10':
+        search = input("Enter a word or phrase to search (capitals do not matter) ")
+        your_todo_list.print_search_items(search)
+
+    elif change == '99':
         user_editing = False
+        
+    else:
+        print('Your input was not recognised.')
 
 
-# Test they work 
-test_list = ToDoList()
-test_list.add_item(ToDoItem("Item 1"))
-test_list.add_item(ToDoItem("Item 2"))
-test_list.add_item(ToDoItem("Item 3"))
-test_list.print_items()
-test_list.remove_item("Item 2")
-test_list.print_items()
-idx = test_list.find_item("Item 3")
-test_list.actual_list[idx].add_date('01/02/2003')
-test_list.actual_list[idx].date_obj
-test_list.actual_list[idx].edit_description('Item 3.3')
-test_list.actual_list[idx].mark_as_complete()
-test_list.actual_list[idx].complete
-test_list.print_items()
-
+print('You have exited list edit.\nYour list will now be saved on disc.')
+save_list_to_disc(your_todo_list)
 
 
 
