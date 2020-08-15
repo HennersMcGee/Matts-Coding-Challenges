@@ -30,6 +30,7 @@ user_editing = True # Break variable, when set to false will end while loop
 
 while user_editing:
     
+    # User choices are condensed to number options so they can be picked up easier
     print('\nYour options are:')
     print('1 - Add a new to do item')
     print('2 - Delete an item')
